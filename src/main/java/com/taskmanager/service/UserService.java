@@ -1,6 +1,7 @@
 package com.taskmanager.service;
 
 import com.taskmanager.entity.User;
+import com.taskmanager.exception.UserAlreadyExistsException;
 import com.taskmanager.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ public class UserService {
     @Transactional
     public User save(User user) {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already exists");
+            throw new UserAlreadyExistsException("Email already exists");
         }
         User userToSave = User.builder()
                 .name(user.getName())
