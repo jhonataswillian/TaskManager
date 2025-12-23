@@ -32,4 +32,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " +
                 ex.getMessage());
     }
+
+    @ExceptionHandler
+    public ResponseEntity<String> handleUserAlreadyExists(com.taskmanager.exception.UserAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
 }
