@@ -4,81 +4,83 @@
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.9-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Testcontainers](https://img.shields.io/badge/Testcontainers-Enabled-9B4F96?style=for-the-badge&logo=testcontainers&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger-OpenAPI-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
 
-## 📌 Sobre o Projeto
+## 📖 About the Project
 
-O **TaskManager** é uma solução robusta para o gerenciamento organizado de projetos e tarefas. Projetado para garantir produtividade com segurança, o sistema permite que usuários criem espaços de trabalho isolados, onde cada recurso é rigorosamente protegido por camadas de autenticação e autorização. É uma plataforma ideal para quem busca controle total sobre suas atividades, garantindo que os dados sejam acessíveis apenas por seus respectivos proprietários.
+**TaskManager** is an enterprise-grade RESTful API engineered to demonstrate robust backend development practices using the modern **Spring Boot** ecosystem.
 
----
+The core philosophy of this project is **Security and Data Isolation**. It implements a multi-tenant-like architecture where resources (Projects and Tasks) are strictly isolated by user ownership. The application was built following **Clean Architecture** principles, enforcing strict separation of concerns and maintainability.
 
-## 📖 Project Overview
-
-**TaskManager** is an enterprise-grade RESTful API designed to demonstrate advanced backend engineering concepts using the **Spring Boot** ecosystem. 
-
-The project focuses strictly on **Clean Architecture**, **SOLID principles**, and **Security Best Practices** (OWASP). It implements a multi-tenant-like data isolation strategy where resources are strictly protected based on user ownership.
-
-### Key Architectural Highlights
-- **Strict Layered Architecture:** Clear separation between Controllers, Services, Repositories, and Entities.
-- **Domain-Driven Design (DDD) Hints:** usage of Rich Models (protecting invariants) over Anemic Models.
-- **Stateless Authentication:** Custom Security Filter Chain implementing JWT (JSON Web Tokens).
-- **Automated Database Migrations:** Version control for database schema using Flyway.
-- **Unified Error Handling:** Centralized `@RestControllerAdvice` transforming Java Exceptions into semantic HTTP responses (404, 400, 409).
+### 🌟 Key Features
+- **Stateless Authentication:** Secure login using **JWT (JSON Web Tokens)** with a custom Security Filter Chain.
+- **Resource Isolation:** Users can strictly access only their own data. Accessing another user's resource results in a `404 Not Found` (Security by Obscurity) rather than just `403 Forbidden`.
+- **Database Migrations:** Automated schema versioning with **Flyway**.
+- **Unified Error Handling:** Centralized `@RestControllerAdvice` that transforms Java Exceptions into semantic HTTP responses (400, 404, 409, 500).
+- **Interactive Documentation:** Fully documented API with **Swagger UI (OpenAPI)**.
 
 ---
 
-## 🛠 Tech Stack
+## 🛠 Tech Stack & Architecture
 
-- **Language:** Java 21 (LTS)
-- **Framework:** Spring Boot 3.5.9
-- **Database:** PostgreSQL (Containerized)
-- **ORM:** Spring Data JPA (Hibernate)
-- **Security:** Spring Security 6 + java-jwt (Auth0)
-- **Migrations:** Flyway
-- **Validation:** Jakarta Validation (Bean Validation)
-- **Utilities:** Lombok, Docker Compose
+The project adheres to the standard **Layered Architecture**:
+`Controller` -> `Service` -> `Repository` -> `Database`.
 
----
-
-## 🚀 Features Implemented
-
-### 1. Authentication & Security
-- **Sign Up:** User registration with `BCrypt` password hashing.
-- **Login:** Stateless authentication returning `Bearer` JWT tokens (HMAC256).
-- **Access Control:** All endpoints (except auth) are protected by a custom `OncePerRequestFilter`.
-
-### 2. Project Management
-- **CRUD Operations:** Create, Read, Update (Patch), and Delete projects.
-- **Data Isolation:** A user can **only** access or modify projects they created. Accessing another user's project results in a `404 Not Found` (Security by Obscurity/Isolation), not just a 403.
-- **Partial Updates:** Semantic `PATCH` implementation for updating specific fields without overwriting the entire resource.
+| Component | Technology | Description |
+| :--- | :--- | :--- |
+| **Language** | Java 21 (LTS) | Leveraging Records, Pattern Matching, and virtual threads readiness. |
+| **Framework** | Spring Boot 3.5.9 | Core framework for Dependency Injection and Web MVC. |
+| **Database** | PostgreSQL 16 | Relational database run via **Docker Compose**. |
+| **ORM** | Spring Data JPA | Hibernate implementation for efficient data access. |
+| **Security** | Spring Security 6 | Configuration of Filter Chains, Password Encoding (BCrypt), and CORS. |
+| **Testing** | JUnit 5 + Mockito | For fast, isolated Unit Tests. |
+| **Integration** | Testcontainers | **Real PostgreSQL** containers for reliable End-to-End testing. |
 
 ---
 
 ## 🏗 Database Schema
 
-The application uses a relational model managed by Flyway migrations:
-
-1.  **Users:** Stores credentials and profile data.
-2.  **Projects:** Linked to Users via Foreign Key (`ON DELETE CASCADE`).
+The relational model is managed by **Flyway**. The strict integrity is enforced by Foreign Keys with `ON DELETE CASCADE`.
 
 ```sql
--- V2__create-table-projects.sql (Snippet)
-CREATE TABLE projects (
+-- Relationship: User (1) -> (N) Projects -> (N) Tasks
+CREATE TABLE tasks (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
     ...
-    user_id BIGINT NOT NULL,
-    CONSTRAINT fk_projects_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    project_id BIGINT NOT NULL,
+    CONSTRAINT fk_tasks_project FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 ```
 
 ---
 
-## ⚡ How to Run
+## 🧪 Testing Strategy
+
+This project takes quality assurance seriously, implementing the **Testing Pyramid**:
+
+### 1. Unit Tests (`/src/test/java/**/service`)
+*   **Focus:** Business logic isolation.
+*   **Tools:** JUnit 5, Mockito.
+*   **Coverage:** Services and Controllers are tested ensuring that business rules (like "User cannot create task in another user's project") are enforced.
+
+### 2. Integration Tests (`FullFlowIntegrationTest.java`)
+*   **Focus:** End-to-End user flows.
+*   **Tools:** **Testcontainers** (Docker).
+*   **Scenario:** The test spins up a real PostgreSQL container, registers a user, logs in to retrieve a JWT, creates a project, and verifies persistence.
+*   **Why:** Ensures the application works in a production-like environment.
+
+---
+
+## ⚡ Getting Started
 
 ### Prerequisites
-- Java 21 SDK
-- Docker & Docker Compose
+*   Java 21 SDK
+*   Docker & Docker Compose
 
-### Fast Start
-The project utilizes `spring-boot-docker-compose`. When you run the application, it automatically spins up the PostgreSQL container defined in `compose.yaml`.
+### Fast Run (Localhost)
+The application utilizes `spring-boot-docker-compose`. When you start the app, it automatically provisions the database.
 
 1.  **Clone the repository:**
     ```bash
@@ -91,27 +93,32 @@ The project utilizes `spring-boot-docker-compose`. When you run the application,
     ./mvnw spring-boot:run
     ```
 
-3.  **Access the API:**
-    The API will be available at `http://localhost:8080`.
+3.  **Access Swagger UI:**
+    Open `http://localhost:8080/swagger-ui.html` to explore and test endpoints.
+
+### Running Tests
+To execute the full suite (including Testcontainers):
+```bash
+./mvnw test
+```
 
 ---
 
-## 🔌 API Endpoints
+## 🔌 Main Endpoints
 
-### Authentication
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :---: |
-| `POST` | `/users` | Register a new user | ❌ |
-| `POST` | `/auth/login` | Authenticate and retrieve JWT | ❌ |
+### Auth
+*   `POST /users` - Register new user.
+*   `POST /auth/login` - Authenticate and receive Bearer Token.
 
 ### Projects
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :---: |
-| `GET` | `/projects` | List all projects owned by the user | ✅ |
-| `GET` | `/projects/{id}` | Get specific project details | ✅ |
-| `POST` | `/projects` | Create a new project | ✅ |
-| `PATCH` | `/projects/{id}` | Update project (Title/Description) | ✅ |
-| `DELETE`| `/projects/{id}` | Delete a project | ✅ |
+*   `GET /projects` - List my projects.
+*   `POST /projects` - Create new project.
+*   `PATCH /projects/{id}` - Update project details.
+
+### Tasks
+*   `POST /projects/{projectId}/tasks` - Create task within a project.
+*   `GET /projects/{projectId}/tasks` - List tasks.
+*   `PATCH /projects/{projectId}/tasks/{taskId}` - Move task status (TODO -> DONE).
 
 ---
 

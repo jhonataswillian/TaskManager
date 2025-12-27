@@ -1,0 +1,4 @@
+api:
+  security:
+    token:
+      secret: test-secret-key-for-integration-tests-123456
